@@ -29,6 +29,9 @@
 	{
 		"caption": "Ensime: Reformat Source",
 		"command": "ensime_reformat_source"
+	},
+	{
+		"caption": "Ensime: Type Check All",
+		"command": "ensime_type_check_all"
 	}
-
 ]
