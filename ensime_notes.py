@@ -20,7 +20,7 @@ class LangNote:
 
 def lang_note(lang, m):
   return LangNote(
-    lang, 
+    lang,
     m[":msg"],
     m[":file"],
     m[":severity"],
@@ -32,7 +32,7 @@ def lang_note(lang, m):
 def erase_error_highlights(view):
   view.erase_regions("ensime-error")
   view.erase_regions("ensime-error-underline")
-  
+
 def highlight_errors(view, notes):
   if notes is None:
     print "There were no notes?"
@@ -48,9 +48,9 @@ def highlight_errors(view, notes):
     "invalid.illegal",
     sublime.DRAW_EMPTY_AS_OVERWRITE)
   view.add_regions(
-    "ensime-error", 
-    errors, 
-    "invalid.illegal", 
+    "ensime-error",
+    errors,
+    "invalid.illegal",
     "cross",
     sublime.DRAW_OUTLINED)
 
@@ -82,6 +82,20 @@ class EnsimeNotes(sublime_plugin.TextCommand, EnsimeOnly):
       else:
         self.view.erase_status("ensime-typer")
         #sublime.set_timeout(functools.partial(self.view.run_command, "ensime_inspect_type_at_point", self.view.id()), 200)
+    elif action == "quickpanel":
+      if len(self.notes) > 0 :
+        print "hello"
+        w = self.view.window()
+        note_description = map(lambda i: i.message, self.notes)
+        print note_description
+        w.show_quick_panel(note_description, lambda i: jump_to_error(self, i))
+      else:
+        print "nothing to do??"
+
+  # i is the index of the selected note
+def jump_to_error(self, i):
+  print "jump_to_error"
+  note = self.notes[i]
 
 def run_check(view):
     view.checked = True
