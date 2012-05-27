@@ -20,7 +20,7 @@ class LangNote:
 
 def lang_note(lang, m):
   return LangNote(
-    lang, 
+    lang,
     m[":msg"],
     m[":file"],
     m[":severity"],
@@ -32,7 +32,7 @@ def lang_note(lang, m):
 def erase_error_highlights(view):
   view.erase_regions("ensime-error")
   view.erase_regions("ensime-error-underline")
-  
+
 def highlight_errors(view, notes):
   if notes is None:
     print "There were no notes?"
@@ -48,9 +48,9 @@ def highlight_errors(view, notes):
     "invalid.illegal",
     sublime.DRAW_EMPTY_AS_OVERWRITE)
   view.add_regions(
-    "ensime-error", 
-    errors, 
-    "invalid.illegal", 
+    "ensime-error",
+    errors,
+    "invalid.illegal",
     "cross",
     sublime.DRAW_OUTLINED)
 
@@ -111,10 +111,26 @@ class EnsimeInspectTypeAtPoint(sublime_plugin.TextCommand, EnsimeOnly):
 
   def handle_reply(self, data):
     d = data[1][1]
-    if d[1] != "<notype>":
-      self.view.set_status("ensime-typer", "(" + str(d[7]) + ") " + d[5])
-    else:
-      self.view.erase_status("ensime-typer")
+
+    handlers = {
+      lambda d: d[":name"] == "<notype>": None,
+      lambda d: ":arrow-type" in d and d[":arrow-type"] == True: self.get_function_string,
+      lambda d: True: self.default_string
+    }
+
+    keys      = [str(v) for i, v in enumerate(d) if i % 2 == 0]
+    values    = [v for i, v in enumerate(d) if i % 2 != 0]
+    data_dict = dict(zip(keys,values))
+
+    msg = None
+    for cond in handlers:
+      if cond(data_dict):
+        msg = handlers[cond](data_dict)
+        break
+
+    self.view.erase_status("ensime-typer")
+    if msg is not None:
+      self.view.set_status("ensime-typer", msg)
 
   def run(self, edit):
     if self.view.file_name():
@@ -122,5 +138,9 @@ class EnsimeInspectTypeAtPoint(sublime_plugin.TextCommand, EnsimeOnly):
       if not cl is None:
         cl.inspect_type_at_point(self.view.file_name(), self.view.sel()[0].begin(), self.handle_reply)
 
+  def get_function_string(self, d):
+    return str(d[":name"])
 
+  def default_string(self, d):
+    return "({0}) {1}".format(str(d[":decl-as"]), str(d[":full-name"]))
 
